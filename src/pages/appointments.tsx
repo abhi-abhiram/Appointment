@@ -72,6 +72,9 @@ const Appointments = () => {
                 <td>
                   <Button
                     onClick={() => {
+                      if (appointment.assignedTo) {
+                        return;
+                      }
                       void assign.mutateAsync({
                         appointmentId: appointment.id,
                       });
@@ -81,8 +84,7 @@ const Appointments = () => {
                       assign.isLoading
                     }
                     disabled={
-                      assign.variables?.appointmentId === appointment.id &&
-                      assign.isLoading
+                      assign.variables?.appointmentId !== appointment.id
                     }
                   >
                     {appointment.assignedTo ? 'UnAssign' : 'Assign'}
