@@ -16,10 +16,13 @@ import {
 import { useForm } from '@mantine/form';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { signIn } from 'next-auth/react';
+import { api } from '~/utils/api';
 
 export default function AuthenticationForm(props: PaperProps) {
   const [type, toggle] = useToggle(['login', 'register']);
   const router = useRouter();
+  const signup = api.user.signup.useMutation();
 
   const form = useForm({
     initialValues: {
@@ -55,21 +58,20 @@ export default function AuthenticationForm(props: PaperProps) {
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={form.onSubmit(async () => {
             if (type === 'register') {
-              const response = await fetch('/api/register', {
-                method: 'POST',
-                body: JSON.stringify({
-                  ...form.values,
-                }),
+              const response = await signup.mutateAsync({
+                name: form.values.name,
+                email: form.values.email,
+                password: form.values.password,
               });
-              if (response.redirected) return router.push(response.url);
+              toggle();
             } else {
-              const response = await fetch('/api/login', {
-                method: 'POST',
-                body: JSON.stringify({
-                  ...form.values,
-                }),
+              const response = await signIn('credentials', {
+                email: form.values.email,
+                password: form.values.password,
+                redirect: false,
+                callbackUrl: '/appointments',
               });
-              if (response.redirected) return router.push('/appointments');
+              void router.push('/appointments');
             }
           })}
         >
@@ -136,7 +138,11 @@ export default function AuthenticationForm(props: PaperProps) {
                 ? 'Already have an account? Login'
                 : "Don't have an account? Register"}
             </Anchor>
-            <Button type='submit' radius='xl'>
+            <Button
+              type='submit'
+              radius='xl'
+              loading={type === 'register' ? signup.isLoading : false}
+            >
               {upperFirst(type)}
             </Button>
           </Group>

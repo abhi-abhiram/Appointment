@@ -31,7 +31,7 @@ export const appointmentRouter = createTRPCRouter({
                 id: input.appointmentId
             },
             data: {
-                assignedTo: ctx.session.userId
+                assignedTo: ctx.session.user.id
             }
         })
 

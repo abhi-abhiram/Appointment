@@ -17,13 +17,13 @@
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
 import { prisma } from "~/server/db";
-import { auth } from "~/auth/lucia";
-import { type Session } from "lucia-auth";
-
+import { type Session } from "next-auth";
+import { getServerAuthSession } from "~/server/common/get-server-auth-session";
 
 type CreateContextOptions = {
   session: Session | null;
 };
+
 
 /**
  * This helper generates the "internals" for a tRPC context. If you need to use it, you can export
@@ -51,12 +51,12 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
 export const createTRPCContext = async (opts: CreateNextContextOptions) => {
   const { req, res } = opts;
 
-  const sessionId = req.cookies['auth_session'] as string;
+
 
 
 
   // const authRequest = auth.handleRequest(req, res);
-  const session = sessionId ? await auth.validateSession(sessionId) : null;
+  const session = await getServerAuthSession({ req, res });
 
   // Get the session from the server using the getServerSession wrapper function
   // const session = user ? { user } : null;
@@ -117,7 +117,7 @@ export const publicProcedure = t.procedure;
 
 /** Reusable middleware that enforces users are logged in before running the procedure. */
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.session || !ctx.session.userId) {
+  if (!ctx.session || !ctx.session.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({

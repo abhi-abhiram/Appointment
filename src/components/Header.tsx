@@ -14,9 +14,8 @@ import {
   rem,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useContext } from 'react';
-import SessionContext from '~/context/SessionContext';
 
 const useStyles = createStyles((theme) => ({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -95,7 +94,7 @@ export function HeaderMegaMenu() {
   const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
   const { classes, theme } = useStyles();
   const { push } = useRouter();
-  const { userId } = useContext(SessionContext).SessionState;
+  const { user } = useSession().data ?? {};
 
   return (
     <>
@@ -118,18 +117,11 @@ export function HeaderMegaMenu() {
           </Group>
 
           <Group className={classes.hiddenMobile}>
-            {userId ? (
+            {user?.id ? (
               <Button
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                onClick={async () => {
-                  try {
-                    await fetch('/api/logout', {
-                      method: 'POST',
-                    });
-                    void push('/login');
-                  } catch (e) {
-                    console.log(e);
-                  }
+                onClick={() => {
+                  void signOut({ callbackUrl: '/' });
                 }}
               >
                 Logout

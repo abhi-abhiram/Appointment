@@ -8,49 +8,30 @@ datasource db {
     relationMode = "prisma"
 }
 
-model AuthUser {
-    id           String        @id @unique
-    email        String        @unique
-    auth_session AuthSession[]
-    auth_key     AuthKey[]
-    name         String
-    appoinments  Appointment[]
-
-    @@map("auth_user")
+model User {
+    id          String        @id @unique @default(cuid())
+    name        String
+    email       String        @unique
+    credentials Credentials?
+    Appointment Appointment[]
 }
 
-model AuthSession {
-    id             String   @id @unique
-    user_id        String
-    active_expires BigInt
-    idle_expires   BigInt
-    auth_user      AuthUser @relation(references: [id], fields: [user_id], onDelete: Cascade)
-
-    @@index([user_id])
-    @@map("auth_session")
-}
-
-model AuthKey {
-    id              String   @id @unique
-    hashed_password String?
-    user_id         String
-    primary_key     Boolean
-    expires         BigInt?
-    auth_user       AuthUser @relation(references: [id], fields: [user_id], onDelete: Cascade)
-
-    @@index([user_id])
-    @@map("auth_key")
+model Credentials {
+    id       String @id @unique @default(cuid())
+    userID   String @unique
+    password String
+    user     User   @relation(fields: [userID], references: [id])
 }
 
 model Appointment {
-    id         String    @id @unique @default(cuid())
+    id         String   @id @unique @default(cuid())
     email      String
     name       String
     time       String
     date       String
     assignedTo String?
-    User       AuthUser? @relation(references: [id], fields: [assignedTo], onDelete: Cascade)
-    created_at DateTime  @default(now())
+    User       User?    @relation(references: [id], fields: [assignedTo], onDelete: Cascade)
+    created_at DateTime @default(now())
 
     @@index([assignedTo])
 }
