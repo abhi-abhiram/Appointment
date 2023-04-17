@@ -50,8 +50,13 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
  */
 export const createTRPCContext = async (opts: CreateNextContextOptions) => {
   const { req, res } = opts;
+
+  const sessionId = req.cookies['auth_session'] as string;
+
+
+
   // const authRequest = auth.handleRequest(req, res);
-  const session = await auth.validateSession(req.cookies['auth_session'] as string);
+  const session = sessionId ? await auth.validateSession(sessionId) : null;
 
   // Get the session from the server using the getServerSession wrapper function
   // const session = user ? { user } : null;

@@ -59,6 +59,7 @@ export const SessionContextProvider = ({
   const me = api.user.me.useQuery(undefined, {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    retry: false,
   });
 
   const { push } = useRouter();
@@ -70,6 +71,10 @@ export const SessionContextProvider = ({
       });
 
       void push('/appointments');
+    }
+
+    if (me.error) {
+      void push('/');
     }
   }, [me.data]);
 
