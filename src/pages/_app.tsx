@@ -40,9 +40,12 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   useEffect(() => {
     if (status === 'unauthenticated') {
-      void router.push('/auth');
+      void router.push('/');
+    } else if (status === 'authenticated') {
+      void router.push('/appointments');
     }
   }, [status]);
+
   if (status === 'loading') {
     return (
       <Center h='100vh'>

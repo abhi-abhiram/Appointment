@@ -30,8 +30,16 @@ model Appointment {
     time       String
     date       String
     assignedTo String?
+    status     Status   @default(Open)
     User       User?    @relation(references: [id], fields: [assignedTo], onDelete: Cascade)
     created_at DateTime @default(now())
 
     @@index([assignedTo])
+}
+
+enum Status {
+    Open
+    ReOpened
+    Assigned
+    Closed
 }

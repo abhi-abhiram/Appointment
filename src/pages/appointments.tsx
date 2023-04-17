@@ -1,37 +1,25 @@
-import {
-  Badge,
-  Button,
-  Center,
-  Table,
-  Title,
-  createStyles,
-} from '@mantine/core';
-import { type User } from 'lucia-auth';
-import {
-  type InferGetServerSidePropsType,
-  type GetServerSidePropsContext,
-  type GetServerSidePropsResult,
-} from 'next';
-import {} from 'react';
+import { Badge, Button, Center, Table, Title } from '@mantine/core';
+import { useSession } from 'next-auth/react';
 import { api } from '~/utils/api';
+import { type Status } from '@prisma/client';
 
-const useStyles = createStyles((theme) => ({
-  list: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing.md,
-  },
-  listItem: {
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.gray[0],
-    borderRadius: theme.radius.md,
-  },
-}));
+const statuses: Record<Status, React.ReactNode> = {
+  Open: (
+    <Badge color='orange' mx='auto'>
+      Open
+    </Badge>
+  ),
+  Assigned: <Badge color='green'>Assigned</Badge>,
+  Closed: <Badge>Closed</Badge>,
+  ReOpened: <Badge color='grape'>ReOpened</Badge>,
+};
 
 const Appointments = () => {
   const { data } = api.appointment.appointments.useQuery();
-  const { classes } = useStyles();
   const assign = api.appointment.assign.useMutation();
+  const close = api.appointment.close.useMutation();
+  const reopen = api.appointment.reopen.useMutation();
+  const { user } = useSession().data ?? {};
 
   return (
     <div>
@@ -49,6 +37,8 @@ const Appointments = () => {
               <th>Appointment Time</th>
               <th>Appointment Status</th>
               <th></th>
+              <th></th>
+              <th></th>
             </tr>
           </thead>
 
@@ -60,21 +50,10 @@ const Appointments = () => {
                 <td>{appointment.email}</td>
                 <td>{appointment.date}</td>
                 <td>{appointment.time}</td>
-                <td>
-                  {appointment.assignedTo ? (
-                    <Badge color='green'>Assigned</Badge>
-                  ) : (
-                    <Badge color='orange' mx='auto'>
-                      Open
-                    </Badge>
-                  )}
-                </td>
+                <td>{statuses[appointment.status]}</td>
                 <td>
                   <Button
                     onClick={() => {
-                      if (appointment.assignedTo) {
-                        return;
-                      }
                       void assign.mutateAsync({
                         appointmentId: appointment.id,
                       });
@@ -84,10 +63,53 @@ const Appointments = () => {
                       assign.isLoading
                     }
                     disabled={
-                      assign.variables?.appointmentId !== appointment.id
+                      Boolean(appointment.assignedTo) ||
+                      appointment.status === 'Closed'
                     }
                   >
-                    {appointment.assignedTo ? 'UnAssign' : 'Assign'}
+                    Assign
+                  </Button>
+                </td>
+                <td>
+                  <Button
+                    onClick={() => {
+                      void reopen.mutateAsync({
+                        appointmentId: appointment.id,
+                      });
+                    }}
+                    loading={
+                      reopen.variables?.appointmentId === appointment.id &&
+                      reopen.isLoading
+                    }
+                    disabled={
+                      appointment.assignedTo !== user?.id ||
+                      appointment.status === 'Closed' ||
+                      appointment.status === 'ReOpened' ||
+                      appointment.status === 'Open'
+                    }
+                    color='orange'
+                  >
+                    Reopen
+                  </Button>
+                </td>
+                <td>
+                  <Button
+                    onClick={() => {
+                      void close.mutateAsync({
+                        appointmentId: appointment.id,
+                      });
+                    }}
+                    loading={
+                      close.variables?.appointmentId === appointment.id &&
+                      close.isLoading
+                    }
+                    disabled={
+                      appointment.assignedTo !== user?.id ||
+                      appointment.status === 'Closed'
+                    }
+                    color='green'
+                  >
+                    Close
                   </Button>
                 </td>
               </tr>

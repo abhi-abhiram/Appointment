@@ -14,9 +14,7 @@ export const appointmentRouter = createTRPCRouter({
     }),
 
     appointments: protectedProcedure.query(async ({ ctx }) => {
-        const appointments = await ctx.prisma.appointment.findMany({
-
-        })
+        const appointments = await ctx.prisma.appointment.findMany({})
 
         return {
             appointments
@@ -31,7 +29,8 @@ export const appointmentRouter = createTRPCRouter({
                 id: input.appointmentId
             },
             data: {
-                assignedTo: ctx.session.user.id
+                assignedTo: ctx.session.user.id,
+                status: 'Assigned'
             }
         })
 
@@ -39,6 +38,43 @@ export const appointmentRouter = createTRPCRouter({
             appointment
         }
     }),
+
+    reopen: protectedProcedure.input(z.object({
+        appointmentId: z.string(),
+    })).mutation(async ({ ctx, input }) => {
+        const appointment = await ctx.prisma.appointment.update({
+            where: {
+                id: input.appointmentId
+            },
+            data: {
+                assignedTo: null,
+                status: 'ReOpened'
+            }
+        })
+
+        return {
+            appointment
+        }
+    }
+    ),
+
+    close: protectedProcedure.input(z.object({
+        appointmentId: z.string(),
+    })).mutation(async ({ ctx, input }) => {
+        const appointment = await ctx.prisma.appointment.update({
+            where: {
+                id: input.appointmentId
+            },
+            data: {
+                status: 'Closed'
+            }
+        })
+
+        return {
+            appointment
+        }
+    }
+    )
 
 
 })
