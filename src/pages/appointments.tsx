@@ -13,7 +13,6 @@ import {
   type GetServerSidePropsResult,
 } from 'next';
 import {} from 'react';
-import { auth } from '~/auth/lucia';
 import { api } from '~/utils/api';
 
 const useStyles = createStyles((theme) => ({
@@ -29,9 +28,7 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-const Appointments = (
-  props: InferGetServerSidePropsType<typeof getServerSideProps>
-) => {
+const Appointments = () => {
   const { data } = api.appointment.appointments.useQuery();
   const { classes } = useStyles();
   const assign = api.appointment.assign.useMutation();
@@ -101,23 +98,3 @@ const Appointments = (
 };
 
 export default Appointments;
-
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-): Promise<GetServerSidePropsResult<{ user: User }>> => {
-  const { req, res } = context;
-  const authRequest = auth.handleRequest(req, res);
-  const { user } = await authRequest.validateUser();
-  if (!user)
-    return {
-      redirect: {
-        destination: '/auth',
-        permanent: false,
-      },
-    };
-  return {
-    props: {
-      user,
-    },
-  };
-};
